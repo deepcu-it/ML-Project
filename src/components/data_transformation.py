@@ -24,7 +24,7 @@ class DataTransformation:
         '''
         try:
             categorical_features = ['gender', 'race/ethnicity', 'parental level of education', 'lunch', 'test preparation course']
-            numerical_features = ['reading score', 'writing score', 'total score', 'average']
+            numerical_features = ['reading score', 'writing score']
             numerical_pipeline = Pipeline(
                 steps=[
                     ("imputer",SimpleImputer(strategy="median")),

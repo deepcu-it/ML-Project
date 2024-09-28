@@ -6,7 +6,7 @@ from catboost import CatBoostRegressor
 
 from src.exception import CustomException
 from src.logger import logging
-from src.utils import save_object, evaluate_model
+from src.utils import save_object, evaluate_model, evaluate_hyperparametertunning
 from dataclasses import dataclass
 from sklearn.metrics import r2_score
 import os,sys
@@ -53,3 +53,48 @@ class ModelTrainer:
 
         except Exception as e:
             raise CustomException(e,sys)
+        
+
+class HyperParameterTuning:
+    def __init__(self) -> None:
+        pass
+
+    def initiate_hyperparameter_tuning(self,train_array,test_array): 
+        try:
+            logging.info("hyperparametertuning started")
+            x_train, y_train, x_test, y_test = ( train_array[:,:-1],train_array[:,-1],test_array[:,:-1],test_array[:,-1] )
+            models={
+                "LinearRegression":LinearRegression(),
+                "Ridge":Ridge()
+            }
+            params = {
+                "LinearRegression":{
+                    "fit_intercept":[True,False],
+                    "copy_X":[True,False],
+                },
+                "Ridge":{
+                    "alpha":[0.1,1,10,100],
+                    "fit_intercept":[True,False],
+                    "copy_X":[True,False],
+                }
+            }
+            model_report:dict = evaluate_hyperparametertunning(x_train,y_train,x_test,y_test,models,params)
+            best_model_score = max(list(model_report.values()))
+            best_model_name = list(model_report.keys())[list(model_report.values()).index(best_model_score)]
+
+            best_model = models[best_model_name]
+
+            if best_model_score<0.6:
+                raise CustomException("No best Model found")
+
+            best_model.fit(x_train,y_train)
+            predicted = best_model.predict(x_test)
+            r2 = r2_score(y_test,predicted)
+            
+            logging.info("Best Model found by hyperparameter tuning")
+
+            return r2
+
+        except Exception as e:
+            raise CustomException(e,sys)
+        
